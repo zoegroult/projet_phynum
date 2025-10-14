@@ -16,7 +16,21 @@ Omega_r0 = 9*1e-5
 Omega_L0 = 0.685
 
 
+mu_x = mu_y = 0
+sigma_x = sigma_y = 1
+rho = 
 
+A,T = cpp.resolution_EDO_Friedmann()
+
+Omega_L = cpp.Omega_l(A)
+Omega_M = cpp.Omega_m(A)
+Omega_R = cpp.Omega_r(A)
+
+rho_C = cpp.rho_c(A)
+
+rho_L = Omega_L*rho_C
+rho_R = Omega_R*rho_C
+rho_M = Omega_M*rho_C
 
 
 #------------------------------------------------------------------------------------------------------------------------------------
@@ -73,8 +87,8 @@ def psi(x, y, sigma_x, sigma_y, mu_x, mu_y, rho ):
 
 
 def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
-    X, Y = np.meshgrid(x,y)
-    PSI = psi(X,Y, sigma_x, sigma_y, mu_x, mu_y, rho)
+    
+    PSI = psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho)
 
     dx = np.abs(X[0,0]-X[0,1])
     dy = np.abs(Y[0,0]-Y[1,0])
@@ -102,7 +116,8 @@ def position(x, y, a, t):
     X, Y = np.meshgrid(x,y)
     dpsi_dx, dpsi_dy = nabla_psi(X, Y, sigma_x, sigma_y, mu_x, mu_y, rho)
 
-    
+    xx = X[0,:] + D(a) * dpsi_dx[0,:]
+    yy = 
 
     
 
