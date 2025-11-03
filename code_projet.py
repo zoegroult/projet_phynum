@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import code_preprojet as cpp
+from math import *
 
 
 # variables globales
@@ -18,7 +19,7 @@ Omega_L0 = 0.685
 
 mu_x = mu_y = 0
 sigma_x = sigma_y = 1
-rho = 
+#rho = 
 
 A,T = cpp.resolution_EDO_Friedmann()
 
@@ -47,11 +48,11 @@ def integration_rectangle(a, N=1e4):
     Somme = np.zeros( len(a) )
 
     for i in range( len(a) ):
-        print(i)
+        print("i = ", i)
         x = np.linspace(1e-7, a[i], int(N))
         
         S = 0
-        S += 0.5 * (x[1:]-x[:-1]) * (f(x[1:]) + f(x[:-1]))
+        S = np.sum( 0.5 * (x[1:]-x[:-1]) * (f(x[1:]) + f(x[:-1])) )
         
         #for j in range( len(x)-1 ):
         #    S += 0.5 * (x[j+1] - x[j]) * (f(x[j+1]) + f(x[j]))
@@ -87,12 +88,17 @@ def psi(x, y, sigma_x, sigma_y, mu_x, mu_y, rho ):
 
 
 def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
-    
-    PSI = psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho)
+    dx = np.abs(x[0,0]-x[0,1])
+    dy = np.abs(y[0,0]-y[1,0])
 
-    dx = np.abs(X[0,0]-X[0,1])
-    dy = np.abs(Y[0,0]-Y[1,0])
 
+
+    dpsi_dx = ( psi(x+dx,y, sigma_x, sigma_y, mu_x, mu_y, rho) - psi(x-dx,y, sigma_x, sigma_y, mu_x, mu_y, rho) ) / (2*dx)
+    dpsi_dy = ( psi(x,y+dy, sigma_x, sigma_y, mu_x, mu_y, rho) - psi(x,y-dy, sigma_x, sigma_y, mu_x, mu_y, rho) ) / (2*dy)
+
+
+
+    """
     dpsi_dx[1:-1, :] = (PSI[2:,:] - PSI[:-2, :]) / (2*dx)
     dpsi_dy[:, 1:-1] = (PSI[:,2:] - PSI[:, :-2]) / (2*dy)
 
@@ -102,6 +108,8 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 
     dpsi_dy[:,0] = (PSI[:,1] - PSI[:,0])/ dy
     dpsi_dx[:,-1] = (PSI[:,-1] - PSI[:,-2])/ dy
+    
+    """
 
     return dpsi_dx, dpsi_dy
     
@@ -112,20 +120,68 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 #------------------------------------------------------------------------------------------------------------------------------------
 # Partie servant à avoir la position x de chaque particules en fonction du temps :
 
-def position(x, y, a, t):
-    X, Y = np.meshgrid(x,y)
-    dpsi_dx, dpsi_dy = nabla_psi(X, Y, sigma_x, sigma_y, mu_x, mu_y, rho)
 
-    xx = X[0,:] + D(a) * dpsi_dx[0,:]
-    yy = 
 
     
 
 
 
-plt.figure(figsize=(7,5))
-plt.plot( cpp.A, D, 'bo:')
-plt.title("évolution du taux de croissance linéaire")
-plt.xlabel("facteur d'échelle a(t)")
-plt.ylabel("taux de croissance linéaire D(a)")
-plt.show()
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------------------------
+# Partie simplifiée avec les transformées de Fourier 
+def gradient_psi(a, b, N):
+    dx = dy = (b-a)/N
+    Phi = np.random.normal(size=(N,N))  # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
+    
+    Psi = Phi * -2/(3*Omega_m0*H0**2)
+
+    Psi_tilde= np.fft.fftn(Psi)  
+
+    kx = 2*np.pi*np.fft.fftfreq( len(Psi) , dx )
+    ky = 2*np.pi*np.fft.fftfreq( len(Psi) , dy )
+    Kx,Ky = np.meshgrid(kx,ky)
+    K = np.sqrt(Kx**2 + Ky**2)
+
+    grad_Psi_tilde = 1j * K * Psi_tilde
+
+    grad_Psi = np.fft.ifftn(grad_Psi_tilde)
+
+    """plt.figure()
+    plt.imshow(np.real(grad_Psi), extent=[a, b, a, b], origin='lower', cmap='plasma')
+    plt.colorbar(label="Intensité")
+    plt.title(f"Affichage de grad_psi à t = {t0} Gyr")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.show()"""
+
+    return grad_Psi
+
+
+def position(Q, a, b, N, i):
+    d = D(A)
+    P = Q + d[i] * gradient_psi(a,b,N)
+    return P
+
+
+
+
+
+def affichage(a,b,N,i):
+    Q = np.random.uniform(N,N)
+    plt.imshow(position(Q,a,b,N,i), extent=[a, b, a, b], origin='lower', cmap='plasma')
+    plt.colorbar(label="Intensité")
+    plt.title(f"Affichage de la position à t = {T[i]} Gyr")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.show()
+
+
+
+print(len(A))
+affichage(-10,10,1000,2)
+
+
+
