@@ -48,7 +48,8 @@ def integration_rectangle(a, N=1e4):
     Somme = np.zeros( len(a) )
 
     for i in range( len(a) ):
-        print("i = ", i)
+        if i%10000 == 0:
+            print("i =", i)
         x = np.linspace(1e-7, a[i], int(N))
         
         S = 0
@@ -59,10 +60,21 @@ def integration_rectangle(a, N=1e4):
 
         Somme[i] = S  
     return Somme   
+ 
 
+"""S = integration_rectangle(A)
+
+lines = []
+with open("integ.dat", 'w') as fich:
+    for j in range(len(A)):
+        lines.append(f"{S[j]} \n")
+    fich.writelines(lines)"""
+
+integrale = np.loadtxt('integ.dat')
 
 def D(a):
-    return integration_rectangle(a) * H(a)/H0 
+    return integrale * H(a) /H0
+    #return integration_rectangle(a) * H(a)/H0 
 
 
 
@@ -170,18 +182,21 @@ def position(Q, a, b, N, i):
 
 
 def affichage(a,b,N,i):
+    plt.figure()
     Q = np.random.uniform(N,N)
-    plt.imshow(position(Q,a,b,N,i), extent=[a, b, a, b], origin='lower', cmap='plasma')
+    plt.imshow(np.abs(position(Q,a,b,N,i)), extent=[a, b, a, b], origin='lower', cmap='plasma')
     plt.colorbar(label="Intensité")
     plt.title(f"Affichage de la position à t = {T[i]} Gyr")
     plt.xlabel("X")
     plt.ylabel("Y")
-    plt.show()
+    
 
 
 
 print(len(A))
-affichage(-10,10,1000,2)
+affichage(-10,10,1000,0)
+affichage(-10,10,1000,2000000)
+plt.show()
 
 
 
