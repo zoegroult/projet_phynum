@@ -21,18 +21,6 @@ mu_x = mu_y = 0
 sigma_x = sigma_y = 1
 
 
-A,T = cpp.resolution_EDO_Friedmann()
-print('len(a) = ', len(A))
-
-Omega_L = cpp.Omega_l(A)
-Omega_M = cpp.Omega_m(A)
-Omega_R = cpp.Omega_r(A)
-
-rho_C = cpp.rho_c(A)
-
-rho_L = Omega_L*rho_C
-rho_R = Omega_R*rho_C
-rho_M = Omega_M*rho_C
 
 
 #------------------------------------------------------------------------------------------------------------------------------------
@@ -79,9 +67,12 @@ integrale_14gyr = np.loadtxt('integ1.dat')
 
 integrale_30gyr = np.loadtxt('integ.dat')
 
-def D(a):
-    return integrale_14gyr * H(a) /H0
-    #return integration_rectangle(a) * H(a)/H0 
+def D(t):
+    while x < a(t):
+        I = np.sum( 0.5 * (xi+1  - xi ) * ( f(xi+1) - f(xi) ) )
+    
+    (  return I * H(a) /H0
+    
 
 
 
@@ -153,14 +144,14 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 # Partie simplifiée avec les transformées de Fourier 
 def gradient_psi(a, b, N):
     dx = dy = (b-a)/N
-    phi = np.random.normal(size=(N,N), scale=100000)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
+    phi = np.random.normal(size=N, scale=100000)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
     
     psi = phi * -2/(3*Omega_m0*H0**2)
 
     psi_tilde= np.fft.fftn(psi)  
 
-    kx = 2*np.pi*np.fft.fftfreq( len(Psi) , dx )
-    ky = 2*np.pi*np.fft.fftfreq( len(Psi) , dy )
+    kx = 2*np.pi*np.fft.fftfreq( len(psi) , dx )
+    ky = 2*np.pi*np.fft.fftfreq( len(psi) , dy )
     
 
     grad_psi_tilde_x = 1j * ky * psi_tilde
@@ -169,15 +160,15 @@ def gradient_psi(a, b, N):
     grad_psi_x = np.fft.ifftn(grad_psi_tilde_x)
     grad_psi_y = np.fft.ifftn(grad_psi_tilde_y)
 
-    grad_psi, xedges, yedges = np.histogram2d( np.real(grad_psi_x), np.real(grad_psi_y), bins=30 )
+    grad_psi, xedges, yedges = np.histogram2d( np.real(grad_psi_x), np.real(grad_psi_y), bins=100 )
 
-    """plt.figure()
-    plt.imshow(np.real(grad_psi), extent=[a, b, a, b], origin='lower', cmap='plasma')
+    plt.figure()
+    plt.imshow(grad_psi, extent=[a, b, a, b], origin='lower', cmap='plasma')
     plt.colorbar(label="Intensité")
-    plt.title(f"Affichage de grad_psi à t = {t0} Gyr")
+    plt.title("Affichage de grad_psi")
     plt.xlabel("X")
     plt.ylabel("Y")
-    plt.show()"""
+    plt.show()
 
     return grad_psi
 
@@ -205,9 +196,9 @@ def affichage(a,b,N,i):
     
 
 
+gradient_psi(-10, 10, 1000)
 
-
-
+"""
 affichage(-1000, 1000,1000,10)
 affichage(-1000,1000, 1000,1000000)
 
@@ -216,7 +207,7 @@ affichage(-10,10, 1000,1000000)
 
 affichage(-1, 1,100,10)
 affichage(-1,1, 100,1000000)
-plt.show()
+plt.show()"""
 
 
 
