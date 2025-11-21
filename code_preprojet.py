@@ -12,20 +12,18 @@ import math
 
 
 # variables globales
-H0 = 0.070      # 67.4*1e-19*1e9*365.25*24*3600/3.03 : cste de Hubble à notre ère (conversion en Gyr-1)
-ai = 1e-6     # facteur d'échelle initial (au début de l'Univers) 
-ti = 1/(365.25*1e9)   # i = temps initial (vers les débuts de l'Univers) en Gyr
-t0 = 30 # 0 = temps de notre ère (age de l'Univers) en Gyr
-G = 6.6742*1e-11  # constante gravitationnelle de Newton ( À convertir ???)
-
-
+H0 = 0.070                          # 67.4*1e-19*1e9*365.25*24*3600/3.03 : cste de Hubble à notre ère (conversion en Gyr-1)
+ai = 1e-6                           # facteur d'échelle initial (au début de l'Univers) 
+ti = 1/(365.25*1e9)                 # i = temps initial (vers les débuts de l'Univers) en Gyr
+t0 =  14                            # 0 = temps de notre ère (age de l'Univers) en Gyr
+G = 6.6742*1e-11                    # constante gravitationnelle de Newton ( À convertir ???)
 Omega_m0 = 0.315
 Omega_r0 = 9*1e-5
 Omega_L0 = 0.685
 
 
 
-def resolution_EDO_Friedmann(om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, h=1e-5):   # fonction qui resoud l'equa diff avec la methode d'euler (h=pas de temps) 
+def resolution_complète_EDO_Friedmann(om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, h=1e-5):   # fonction qui resoud l'equa diff avec la methode d'euler (h=pas de temps) 
     N = int((t0-ti)/h)
     
     A=np.zeros(N+1)
@@ -41,14 +39,33 @@ def resolution_EDO_Friedmann(om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, h=1e-5
 
 
 
+
+def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
+    A = ai
+    t = ti
+
+    while t < t_voulu :
+
+        if A < 1e-5:
+            h = 1e-12
+
+        elif A < 1e-2:
+            h = 1e-10
+   
+        else:
+            h = H
+    
+        A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
+        t += h
+
+    return A
+
+
         
 
-def Omega_m(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de densité de la matiere totale (mat visible + mat noire)
+def Omega_m(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de densité de la matiere totale (mat visible + mat noire)
     
-    Omega_m = np.zeros(len(a))
-    
-    for i in range(len(a)):
-        Omega_m[i] = om_0 / ( (a[i]**-1)*or_0 + om_0 + (a[i]**3) * ol_0 )
+    Omega_m = om_0 / ( (a(t)**-1)*or_0 + om_0 + (a(t)**3) * ol_0 )
     
     return Omega_m
 
@@ -56,11 +73,9 @@ def Omega_m(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de den
 
 
 
-def Omega_r(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de densité de radiation
-    Omega_r = np.zeros(len(a))
-    
-    for i in range(len(a)):
-        Omega_r[i] = or_0 / ( or_0 + a[i] * om_0 + (a[i]**4) * ol_0 ) 
+def Omega_r(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de densité de radiation
+
+    Omega_r = or_0 / ( or_0 + a(t) * om_0 + (a(t)**4) * ol_0 ) 
     
     return Omega_r
 
@@ -68,11 +83,9 @@ def Omega_r(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de den
 
 
 
-def Omega_l(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):     # parametre de densité d'énergie noire 
-    Omega_l = np.zeros(len(a))
-    
-    for i in range(len(a)):
-        Omega_l[i] = ol_0 / ( (a[i]**-4) * or_0 + (a[i]**-3) * om_0 + ol_0 ) 
+def Omega_l(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):     # parametre de densité d'énergie noire 
+
+    Omega_l = ol_0 / ( (a(t)**-4) * or_0 + (a(t)**-3) * om_0 + ol_0 ) 
     
     return Omega_l
 
@@ -80,37 +93,11 @@ def Omega_l(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):     # parametre de 
 
 
 
-def rho_c(a, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):
-    rho_c = np.zeros(len(a))
-    
-    for i in range(len(a)):
-        rho_c[i]= (3/8*np.pi*G) * H0**2 * ((a[i]**-4) * or_0 + (a[i]**-3) * om_0 + ol_0)
+def rho_c(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):
+
+    rho_c= (3/8*np.pi*G) * H0**2 * ((a(t)**-4) * or_0 + (a(t)**-3) * om_0 + ol_0)
     
     return  rho_c
-
-
-
-
-def meme_pt(a, var1, var2, tol = 1e-9):
-    for i in range(len(a)):
-        if math.isclose(var1[i], var2[i], rel_tol=tol):
-            print(i)
-            return i
-
-
-
-
-A,T = resolution_EDO_Friedmann()
-
-Omega_L = Omega_l(A)
-Omega_M = Omega_m(A)
-Omega_R = Omega_r(A)
-
-rho_C = rho_c(A)
-
-rho_L = Omega_L*rho_C
-rho_R = Omega_R*rho_C
-rho_M = Omega_M*rho_C
 
 
 
