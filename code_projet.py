@@ -54,24 +54,19 @@ def integration_rectangle(a, N=1e4):
         Somme[i] = S  
     return Somme   
  
-'''
-S = integration_rectangle(A)
 
-lines = []
-with open("integ1.dat", 'w') as fich:
-    for j in range(len(A)):
-        lines.append(f"{S[j]} \n")
-    fich.writelines(lines)'''
 
-integrale_14gyr = np.loadtxt('integ1.dat')
 
-integrale_30gyr = np.loadtxt('integ.dat')
 
-def D(t):
+def D(t, x0, h=1e-5):
+    x = x0
+    I = 0
+
     while x < a(t):
-        I = np.sum( 0.5 * (xi+1  - xi ) * ( f(xi+1) - f(xi) ) )
+        I = np.sum( 0.5 * h * ( f(x + h) - f(x) ) )
+        x += h 
     
-    (  return I * H(a) /H0
+    return I * H(a) /H0
     
 
 
