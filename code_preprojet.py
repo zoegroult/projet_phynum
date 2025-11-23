@@ -41,6 +41,7 @@ def resolution_complète_EDO_Friedmann(om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_
 
 
 def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
+    print('a')
     A = ai
     t = ti
 
@@ -54,14 +55,46 @@ def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
    
         else:
             h = H
-    
+
+        print('t = ', t)
         A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
         t += h
 
     return A
 
 
-        
+
+
+
+def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-4):
+    A = ai
+    t = ti
+
+    while t < t_voulu :
+
+        if t < 1e-10:
+            h = 1e-12
+
+        elif t < 1e-8:
+            h = 1e-10
+
+        elif t < 1e-6:
+            h = 1e-8
+
+        elif t < 1e-4:
+            h = 1e-6
+
+        else:
+            h = H
+
+        A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
+        t += h
+
+    return A
+
+
+
+
 
 def Omega_m(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):  # parametre de densité de la matiere totale (mat visible + mat noire)
     

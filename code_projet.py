@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import code_preprojet as cpp
 from math import *
+plt.ion()
 
 
 # variables globales
@@ -58,17 +59,18 @@ def integration_rectangle(a, N=1e4):
 
 
 
-def D(t, x0, h=1e-5):
-    x = x0
+def D(t, h=1e-5):
+    print('D')
+    x = 1e-5
     I = 0
 
-    while x < a(t):
+    while x < cpp.a2(t):
+
         I = np.sum( 0.5 * h * ( f(x + h) - f(x) ) )
         x += h 
     
-    return I * H(a) /H0
+    return I * H(cpp.a(t)) / H0
     
-
 
 
 
@@ -138,8 +140,9 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 #------------------------------------------------------------------------------------------------------------------------------------
 # Partie simplifiée avec les transformées de Fourier 
 def gradient_psi(a, b, N):
+    print('gradient')
     dx = dy = (b-a)/N
-    phi = np.random.normal(size=N, scale=100000)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
+    phi = np.random.normal(size=(N,N), scale=100000)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
     
     psi = phi * -2/(3*Omega_m0*H0**2)
 
@@ -147,62 +150,67 @@ def gradient_psi(a, b, N):
 
     kx = 2*np.pi*np.fft.fftfreq( len(psi) , dx )
     ky = 2*np.pi*np.fft.fftfreq( len(psi) , dy )
+    kx,ky = np.meshgrid(kx, kx)
     
 
     grad_psi_tilde_x = 1j * ky * psi_tilde
     grad_psi_tilde_y = 1j * kx * psi_tilde
 
-    grad_psi_x = np.fft.ifftn(grad_psi_tilde_x)
-    grad_psi_y = np.fft.ifftn(grad_psi_tilde_y)
+    grad_psi_x = np.real(np.fft.ifftn(grad_psi_tilde_x))
+    grad_psi_y = np.real(np.fft.ifftn(grad_psi_tilde_y))
 
-    grad_psi, xedges, yedges = np.histogram2d( np.real(grad_psi_x), np.real(grad_psi_y), bins=100 )
+    H , xedges, yedges = np.histogram2d(grad_psi_x.ravel(), grad_psi_y.ravel(), bins=200)
 
     plt.figure()
-    plt.imshow(grad_psi, extent=[a, b, a, b], origin='lower', cmap='plasma')
+    print('figure')
+    plt.imshow(H, extent=[a, b, a, b], origin='lower', cmap='plasma')
     plt.colorbar(label="Intensité")
     plt.title("Affichage de grad_psi")
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.show()
+    print('fin')
 
-    return grad_psi
-
-
-
-
-
-def position(Q, a, b, N, i):
-    d = D(A)
-    P = Q + d[i] * gradient_psi(a,b,N)
-    return P
+    return grad_psi_x, grad_psi_y
 
 
 
 
 
-def affichage(a,b,N,i):
+def position_xy(t, a, b, N):
+    print('position')
+    
+    Q = np.random.uniform(size=(N,N))
+    gx, gy = gradient_psi(a,b,N)
+    
+    px = Q + D(t) * gx
+    py = Q + D(t) * gy
+
+    H, xedges, yedges = np.histogram2d(px.ravel(), py.ravel(), bins=200)
+    
+    return H
+
+
+
+
+
+def affichage(t,a,b,N):
+    print('affichage')
+    
     plt.figure()
-    Q = np.random.uniform(N,N)
-    plt.imshow(position(Q,a,b,N,i), extent=[a, b, a, b], origin='lower', cmap='plasma')
-    plt.colorbar(label="Intensité")
-    plt.title(f"Position à t = {T[i]:.6f} Gyr")
+    plt.imshow(position_xy(t,a,b,N), extent=[a, b, a, b], origin='lower', cmap='plasma')
+    plt.colorbar(label="???")
+    plt.title(f"Position à t = {t} Gyr")
     plt.xlabel("X")
     plt.ylabel("Y")
+    plt.show()
     
 
 
 gradient_psi(-10, 10, 1000)
+#affichage(1, -10, 10, 1000)
 
-"""
-affichage(-1000, 1000,1000,10)
-affichage(-1000,1000, 1000,1000000)
 
-affichage(-10, 10,1000,10)
-affichage(-10,10, 1000,1000000)
-
-affichage(-1, 1,100,10)
-affichage(-1,1, 100,1000000)
-plt.show()"""
 
 
 
