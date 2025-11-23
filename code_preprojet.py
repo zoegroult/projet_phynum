@@ -56,7 +56,6 @@ def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
         else:
             h = H
 
-        print('t = ', t)
         A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
         t += h
 
@@ -66,7 +65,8 @@ def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
 
 
 
-def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-4):
+def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
+    print('a')
     A = ai
     t = ti
 
@@ -81,16 +81,19 @@ def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-4):
         elif t < 1e-6:
             h = 1e-8
 
-        elif t < 1e-4:
+        elif t< 1e-4:
             h = 1e-6
 
         else:
             h = H
 
+
         A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
         t += h
+    
+    print(f'a({t_voulu}) =', A/1.0154729584922937)
+    return A/1.0154729584922937
 
-    return A
 
 
 
