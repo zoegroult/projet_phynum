@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import code_preprojet as cpp
 from math import *
-plt.ion()
+
 
 
 # variables globales
@@ -64,13 +64,17 @@ def D(t, h=1e-5):
     x = 1e-5
     I = 0
 
-    while x < cpp.a2(t):
+    A = cpp.a2(t)
+    while x < A:
 
-        I = np.sum( 0.5 * h * ( f(x + h) - f(x) ) )
+        I += 0.5 * h * ( f(x + h) - f(x) ) 
         x += h 
     
-    return I * H(cpp.a(t)) / H0
-    
+    taux_accr = I * H(A) / H0
+
+    print(f'D({t}) = ' , taux_accr)
+    return taux_accr
+
 
 
 
@@ -150,26 +154,13 @@ def gradient_psi(a, b, N):
 
     kx = 2*np.pi*np.fft.fftfreq( len(psi) , dx )
     ky = 2*np.pi*np.fft.fftfreq( len(psi) , dy )
-    kx,ky = np.meshgrid(kx, kx)
+    kx,ky = np.meshgrid(kx, ky)
     
-
     grad_psi_tilde_x = 1j * ky * psi_tilde
     grad_psi_tilde_y = 1j * kx * psi_tilde
 
     grad_psi_x = np.real(np.fft.ifftn(grad_psi_tilde_x))
     grad_psi_y = np.real(np.fft.ifftn(grad_psi_tilde_y))
-
-    H , xedges, yedges = np.histogram2d(grad_psi_x.ravel(), grad_psi_y.ravel(), bins=200)
-
-    plt.figure()
-    print('figure')
-    plt.imshow(H, extent=[a, b, a, b], origin='lower', cmap='plasma')
-    plt.colorbar(label="Intensité")
-    plt.title("Affichage de grad_psi")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.show()
-    print('fin')
 
     return grad_psi_x, grad_psi_y
 
@@ -194,21 +185,39 @@ def position_xy(t, a, b, N):
 
 
 
-def affichage(t,a,b,N):
+def affichage_position(t,a,b,N):
     print('affichage')
     
     plt.figure()
-    plt.imshow(position_xy(t,a,b,N), extent=[a, b, a, b], origin='lower', cmap='plasma')
+    plt.imshow(position_xy(t,a,b,N), extent=[a/2, b/2, a/2, b/2], origin='lower', cmap='plasma')
     plt.colorbar(label="???")
     plt.title(f"Position à t = {t} Gyr")
     plt.xlabel("X")
     plt.ylabel("Y")
-    plt.show()
+    
     
 
 
-gradient_psi(-10, 10, 1000)
-#affichage(1, -10, 10, 1000)
+
+def affichage_gradient(a,b,N):
+    grad_psi_x, grad_psi_y = gradient_psi(a, b, N)
+    
+    H , xedges, yedges = np.histogram2d(grad_psi_x.ravel(), grad_psi_y.ravel(), bins=200)
+
+    plt.figure()
+    plt.imshow(H, extent=[a/2, b/2, a/2, b/2], origin='lower', cmap='plasma')
+    plt.colorbar(label="Intensité")
+    plt.title("Affichage de grad_psi")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    
+
+
+#gradient_psi(-10, 10, 1000)
+"""for i in range(15):
+    print('i =', i)
+    affichage_position(i, -10, 10, 1000)
+plt.show()"""
 
 
 
