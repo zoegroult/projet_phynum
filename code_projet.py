@@ -65,6 +65,7 @@ def D(t, h=1e-5):
     I = 0
 
     A = cpp.a2(t)
+    print('A =', A)
     while x < A:
 
         I += 0.5 * h * ( f(x + h) - f(x) ) 
@@ -72,11 +73,11 @@ def D(t, h=1e-5):
     
     taux_accr = I * H(A) / H0
 
-    print(f'D({t}) = ' , taux_accr)
-    return taux_accr
+    print(f'D({t}) = ' , taux_accr/4.9994700356621485e-06)
+    return taux_accr/4.9994700356621485e-06
 
 
-
+D(13.8)
 
 
 """
@@ -214,6 +215,13 @@ def affichage_gradient(a,b,N):
 
 
 #gradient_psi(-10, 10, 1000)
+
+
+affichage_gradient(-10, 10, 1000)
+affichage_position(1,-10, 10, 1000)
+plt.show()
+
+
 """for i in range(15):
     print('i =', i)
     affichage_position(i, -10, 10, 1000)
