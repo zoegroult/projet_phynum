@@ -60,12 +60,11 @@ def integration_rectangle(a, N=1e4):
 
 
 def D(t, h=1e-5):
-    print('D')
     x = 1e-5
     I = 0
 
     A = cpp.a2(t)
-    print('A =', A)
+    
     while x < A:
 
         I += 0.5 * h * ( f(x + h) - f(x) ) 
@@ -77,7 +76,7 @@ def D(t, h=1e-5):
     return taux_accr/4.9994700356621485e-06
 
 
-D(13.8)
+
 
 
 """
@@ -144,10 +143,10 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 
 #------------------------------------------------------------------------------------------------------------------------------------
 # Partie simplifiée avec les transformées de Fourier 
-def gradient_psi(a, b, N):
-    print('gradient')
-    dx = dy = (b-a)/N
+def gradient_psi(L_box, N):
+    dx = dy = L_box/N
     phi = np.random.normal(size=(N,N), scale=100000)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
+    
     
     psi = phi * -2/(3*Omega_m0*H0**2)
 
@@ -157,8 +156,13 @@ def gradient_psi(a, b, N):
     ky = 2*np.pi*np.fft.fftfreq( len(psi) , dy )
     kx,ky = np.meshgrid(kx, ky)
     
-    grad_psi_tilde_x = 1j * ky * psi_tilde
-    grad_psi_tilde_y = 1j * kx * psi_tilde
+
+    k = np.sqrt(kx**2 + ky**2)
+    k[0,0] = np.inf
+    
+
+    grad_psi_tilde_x = 1j * kx * psi_tilde / k
+    grad_psi_tilde_y = 1j * ky * psi_tilde / k
 
     grad_psi_x = np.real(np.fft.ifftn(grad_psi_tilde_x))
     grad_psi_y = np.real(np.fft.ifftn(grad_psi_tilde_y))
@@ -169,69 +173,73 @@ def gradient_psi(a, b, N):
 
 
 
-def position_xy(t, a, b, N):
-    print('position')
+def position_xy(t, L_box, N):
+
+    qx = np.random.uniform(low= -L_box/2, high=L_box/2, size=N)
+    qy = np.random.uniform(low= -L_box/2, high=L_box/2, size=N)
+    qx,qy = np.meshgrid(qx,qy)
     
-    Q = np.random.uniform(size=(N,N))
-    gx, gy = gradient_psi(a,b,N)
+    gx, gy = gradient_psi(L_box,N)
     
-    px = Q + D(t) * gx
-    py = Q + D(t) * gy
-
-    H, xedges, yedges = np.histogram2d(px.ravel(), py.ravel(), bins=200)
+    px = qx + D(t) * gx
+    py = qy + D(t) * gy
     
-    return H
+    return px, py
 
 
 
 
 
-def affichage_position(t,a,b,N):
-    print('affichage')
+def affichage_position(t, L_box, N):
+    x , y = position_xy(t, L_box, N)
+    
+    H, xedges, yedges = np.histogram2d(x.ravel(), y.ravel(), bins=200, range=[[-L_box/2, L_box/2],[-L_box/2, L_box/2]])
     
     plt.figure()
-    plt.imshow(position_xy(t,a,b,N), extent=[a/2, b/2, a/2, b/2], origin='lower', cmap='plasma')
-    plt.colorbar(label="???")
-    plt.title(f"Position à t = {t} Gyr")
-    plt.xlabel("X")
-    plt.ylabel("Y")
+    plt.imshow(H, extent=[-L_box/2, L_box/2, -L_box/2, L_box/2], origin='lower', cmap='plasma')
+    plt.colorbar(label="Densité")
+    if t == ti :
+        plt.title(f"Position à t = {t : .6e} Gyr")
+    else:
+        plt.title(f"Position à t = {t} Gyr")
+    plt.xlabel("X en Mpc/h")
+    plt.ylabel("Y en Mpc/h")
     
     
+    
 
 
 
-def affichage_gradient(a,b,N):
-    grad_psi_x, grad_psi_y = gradient_psi(a, b, N)
+def affichage_gradient(L_box, N):
+    grad_psi_x, grad_psi_y = gradient_psi(L_box, N)
     
     H , xedges, yedges = np.histogram2d(grad_psi_x.ravel(), grad_psi_y.ravel(), bins=200)
 
     plt.figure()
-    plt.imshow(H, extent=[a/2, b/2, a/2, b/2], origin='lower', cmap='plasma')
-    plt.colorbar(label="Intensité")
+    plt.imshow(H, extent=[-L_box/2, L_box/2, -L_box/2, L_box/2], origin='lower', cmap='plasma')
+    plt.colorbar(label="Densité")
     plt.title("Affichage de grad_psi")
-    plt.xlabel("X")
-    plt.ylabel("Y")
+    plt.xlabel("X en Mpc/h")
+    plt.ylabel("Y en Mpc/h")
+    
     
 
 
-#gradient_psi(-10, 10, 1000)
+def plot(L_box):
+    for i in range(1,15):
+        print('i =', i)
+        affichage_position(i, L_box, 1000)
+    plt.show()
 
 
-affichage_gradient(-10, 10, 1000)
-affichage_position(1,-10, 10, 1000)
-plt.show()
+L_box = 1000   ### Mpc/h
+N = 100        ### nb de "pixels"
 
 
-"""for i in range(15):
-    print('i =', i)
-    affichage_position(i, -10, 10, 1000)
-plt.show()"""
-
-
-
-
-
-
+affichage_position(13.8, L_box, N)
+affichage_gradient(L_box, N)
+affichage_position(ti, L_box, N)
+plot(L_box)
 
 
 
