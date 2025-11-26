@@ -10,7 +10,12 @@ H0 = 0.070      # 67.4*1e-19*1e9*365.25*24*3600/3.03 : cste de Hubble à notre �
 ai = 1e-6     # facteur d'échelle initial (au début de l'Univers) 
 ti = 1/(365.25*1e9)   # i = temps initial (vers les débuts de l'Univers) en Gyr
 t0 = 14 # 0 = temps de notre ère (age de l'Univers) en Gyr
-G = 6.6742*1e-11  # constante gravitationnelle de Newton ( À convertir ???)
+
+M_soleil = 1.98847e30  # masse du soleil en kg
+Gyr_en_s = 3.15576e16  # 1 Gyr = 3.15576e16 s
+Mpc_en_m = 3.0856e22   # 1 Mpc =  3.0856e22 m
+
+G = 6.6742*1e-11 * (1/Mpc_en_m)**3 * M_soleil * (Gyr_en_s)**2 # constante gravitationnelle de Newton en Mpc3
 
 
 Omega_m0 = 0.315
@@ -67,17 +72,17 @@ def D(t, h=1e-5):
     
     while x < A:
 
-        I += 0.5 * h * ( f(x + h) - f(x) ) 
+        I += 0.5 * h * ( f(x + h) + f(x) ) 
         x += h 
     
     taux_accr = I * H(A) / H0
 
-    print(f'D({t}) = ' , taux_accr/4.9994700356621485e-06)
-    return taux_accr/4.9994700356621485e-06
+    
+    print(f'D({t}) = ' , taux_accr / 1.000299270341051)   
 
+    return taux_accr / 1.000299270341051         # cste de normalisation : D(a=1) = 1.000299270341051
 
-
-
+ 
 
 """
 #------------------------------------------------------------------------------------------------------------------------------------
@@ -143,26 +148,26 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 
 #------------------------------------------------------------------------------------------------------------------------------------
 # Partie simplifiée avec les transformées de Fourier 
-def gradient_psi(L_box, N):
+def gradient_psi(L_box, N, sc = 0.1):
     dx = dy = L_box/N
-    phi = np.random.normal(size=(N,N), scale=100000)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
     
+    phi = np.random.normal(size=(N,N), scale=sc)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
     
     psi = phi * -2/(3*Omega_m0*H0**2)
 
-    psi_tilde= np.fft.fftn(psi)  
+    psi_tilde = np.fft.fftn(psi)  
 
-    kx = 2*np.pi*np.fft.fftfreq( len(psi) , dx )
-    ky = 2*np.pi*np.fft.fftfreq( len(psi) , dy )
+    kx = 2*np.pi*np.fft.fftfreq( N , dx )
+    ky = 2*np.pi*np.fft.fftfreq( N , dy )
     kx,ky = np.meshgrid(kx, ky)
     
 
-    k = np.sqrt(kx**2 + ky**2)
-    k[0,0] = np.inf
+    #k = np.sqrt(kx**2 + ky**2)
+    #k[0,0] = np.inf
     
 
-    grad_psi_tilde_x = 1j * kx * psi_tilde / k
-    grad_psi_tilde_y = 1j * ky * psi_tilde / k
+    grad_psi_tilde_x = 1j * kx * psi_tilde #/ k
+    grad_psi_tilde_y = 1j * ky * psi_tilde #/ k
 
     grad_psi_x = np.real(np.fft.ifftn(grad_psi_tilde_x))
     grad_psi_y = np.real(np.fft.ifftn(grad_psi_tilde_y))
@@ -175,8 +180,8 @@ def gradient_psi(L_box, N):
 
 def position_xy(t, L_box, N):
 
-    qx = np.random.uniform(low= -L_box/2, high=L_box/2, size=N)
-    qy = np.random.uniform(low= -L_box/2, high=L_box/2, size=N)
+    qx = np.linspace(-L_box/2, L_box/2, N)
+    qy = np.linspace(-L_box/2, L_box/2, N)
     qx,qy = np.meshgrid(qx,qy)
     
     gx, gy = gradient_psi(L_box,N)
@@ -198,10 +203,12 @@ def affichage_position(t, L_box, N):
     plt.figure()
     plt.imshow(H, extent=[-L_box/2, L_box/2, -L_box/2, L_box/2], origin='lower', cmap='plasma')
     plt.colorbar(label="Densité")
+
     if t == ti :
         plt.title(f"Position à t = {t : .6e} Gyr")
     else:
         plt.title(f"Position à t = {t} Gyr")
+
     plt.xlabel("X en Mpc/h")
     plt.ylabel("Y en Mpc/h")
     
@@ -225,21 +232,24 @@ def affichage_gradient(L_box, N):
     
 
 
-def plot(L_box):
-    for i in range(1,15):
+def plot(T, L_box, N):
+    for i in T:
         print('i =', i)
-        affichage_position(i, L_box, 1000)
+        affichage_position(i, L_box, N)
     plt.show()
 
 
-L_box = 1000   ### Mpc/h
-N = 100        ### nb de "pixels"
+L_box = 2000   ### Mpc/h
+N = 1500     ### nb de "pixels"
 
 
-affichage_position(13.8, L_box, N)
 affichage_gradient(L_box, N)
 affichage_position(ti, L_box, N)
-plot(L_box)
+affichage_position(5, L_box, N)
+affichage_position(13.8, L_box, N)
+plt.show()
+
+
 
 
 
