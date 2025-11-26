@@ -41,6 +41,8 @@ def resolution_complète_EDO_Friedmann(om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_
 
 
 def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
+    """kljcbsqmkvbzqmjbvmqjbvkbvmkqjzbvmozhbvqjbzrlvbzmjoebgvmouzbvzmjbv"""
+
     print('a')
     A = ai
     t = ti
@@ -65,8 +67,10 @@ def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
 
 
 
-def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
-    print('a')
+def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5, afficher = False):
+    """kljcbsqmkvbzqmjbvmqjbvkbvmkqjz
+    
+    bvmozhbvqjbzrlvbzmjoebgvmouzbvzmjbv"""
     A = ai
     t = ti
 
@@ -91,8 +95,11 @@ def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
         A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
         t += h
     
-    print(f'a({t_voulu}) =', A/1.0154729584922937)
+    if afficher == True:
+        print(f'a({t_voulu}) =', A/1.0154729584922937)
+        
     return A/1.0154729584922937
+
 
 
 
@@ -131,7 +138,7 @@ def Omega_l(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):     # parametre de 
 
 def rho_c(t, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0):
 
-    rho_c= (3/8*np.pi*G) * H0**2 * ((a(t)**-4) * or_0 + (a(t)**-3) * om_0 + ol_0)
+    rho_c = (3/(8*np.pi*G)) * H0**2 * ((a(t)**-4) * or_0 + (a(t)**-3) * om_0 + ol_0)
     
     return  rho_c
 
@@ -155,13 +162,18 @@ rho_C = data[:,5]
 
 
 # plot de a(t)
+t = np.linspace(1e-7, 14, 1000)
+A = []
+for i in t:
+    A.append(a2(i))
 plt.figure(figsize=(7,5))
-plt.plot(T, A, 'b:')
+plt.plot(t, A, 'b:')
 plt.xlabel('temps t en Gyr')
 plt.ylabel('facteur d\'échelle a(t)')
 plt.title(f"Courbe d\'évolution du facteur d\'échelle a(t),  t0={t0}")
 plt.grid(True)
 plt.show()
+
 
 
 
