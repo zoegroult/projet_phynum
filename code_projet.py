@@ -65,22 +65,43 @@ def integration_rectangle(a, N=1e4):
 
 
 def D(t, h=1e-5):
-    x = 1e-5
-    I = 0
-
-    A = cpp.a2(t)
+    norm = 1.000299270341051    # cste de normalisation : D_non_normalisée(a=1) = 1.000299270341051
     
-    while x < A:
+    if np.isscalar(t) : 
+        x = 1e-5
+        I = 0
+        A = cpp.a2(t)
+        
+        while x < A:
 
-        I += 0.5 * h * ( f(x + h) + f(x) ) 
-        x += h 
+            I += 0.5 * h * ( f(x + h) + f(x) ) 
+            x += h 
     
-    taux_accr = I * H(A) / H0
+        taux_accr = I * H(A) / H0
 
+        print(f'D({t}) = ' , taux_accr / norm)   
+
+        return taux_accr / norm         
+
+    else : 
+        L = np.zeros( len(t) )
+        
+        for i, ti in enumerate(t): 
+            Ai = cpp.a2(ti)
+            x = 1e-5
+            I = 0
+            
+            while x < Ai:
+
+                I += 0.5 * h * ( f(x + h) + f(x) ) 
+                x += h 
     
-    print(f'D({t}) = ' , taux_accr / 1.000299270341051)   
+            taux_accr = I * H(Ai) / H0   
 
-    return taux_accr / 1.000299270341051         # cste de normalisation : D(a=1) = 1.000299270341051
+            L[i] = taux_accr / norm         
+
+        return L
+
 
  
 
@@ -148,7 +169,7 @@ def nabla_psi(x,y, sigma_x, sigma_y, mu_x, mu_y, rho):
 
 #------------------------------------------------------------------------------------------------------------------------------------
 # Partie simplifiée avec les transformées de Fourier 
-def gradient_psi(L_box, N, sc = 0.1):
+def gradient_psi(L_box, N, sc = 1):
     dx = dy = L_box/N
     
     phi = np.random.normal(size=(N,N), scale=sc)   # potentiel initial (tableau 'carré'(dim 2) de N points (les valeurs sont aléatoires et reparties selon une loi gaussienne))
@@ -178,13 +199,13 @@ def gradient_psi(L_box, N, sc = 0.1):
 
 
 
-def position_xy(t, L_box, N):
+def position_xy(t, L_box, N, sc):
 
     qx = np.linspace(-L_box/2, L_box/2, N)
     qy = np.linspace(-L_box/2, L_box/2, N)
     qx,qy = np.meshgrid(qx,qy)
     
-    gx, gy = gradient_psi(L_box,N)
+    gx, gy = gradient_psi(L_box,N, sc)
     
     px = qx + D(t) * gx
     py = qy + D(t) * gy
@@ -195,8 +216,8 @@ def position_xy(t, L_box, N):
 
 
 
-def affichage_position(t, L_box, N):
-    x , y = position_xy(t, L_box, N)
+def affichage_position(t, L_box, N, sc ):
+    x , y = position_xy(t, L_box, N, sc)
     
     H, xedges, yedges = np.histogram2d(x.ravel(), y.ravel(), bins=200, range=[[-L_box/2, L_box/2],[-L_box/2, L_box/2]])
     
@@ -205,9 +226,9 @@ def affichage_position(t, L_box, N):
     plt.colorbar(label="Densité")
 
     if t == ti :
-        plt.title(f"Position à t = {t : .6e} Gyr")
+        plt.title(f"Position à t = {t : .6e} Gyr scale = {sc}")
     else:
-        plt.title(f"Position à t = {t} Gyr")
+        plt.title(f"Position à t = {t} Gyr, scale = {sc}")
 
     plt.xlabel("X en Mpc/h")
     plt.ylabel("Y en Mpc/h")
@@ -217,15 +238,15 @@ def affichage_position(t, L_box, N):
 
 
 
-def affichage_gradient(L_box, N):
-    grad_psi_x, grad_psi_y = gradient_psi(L_box, N)
+def affichage_gradient(L_box, N, sc =0.1):
+    grad_psi_x, grad_psi_y = gradient_psi(L_box, N, sc)
     
     H , xedges, yedges = np.histogram2d(grad_psi_x.ravel(), grad_psi_y.ravel(), bins=200)
 
     plt.figure()
     plt.imshow(H, extent=[-L_box/2, L_box/2, -L_box/2, L_box/2], origin='lower', cmap='plasma')
     plt.colorbar(label="Densité")
-    plt.title("Affichage de grad_psi")
+    plt.title("Affichage de grad_psi, scale = {sc}")
     plt.xlabel("X en Mpc/h")
     plt.ylabel("Y en Mpc/h")
     
@@ -239,14 +260,49 @@ def plot(T, L_box, N):
     plt.show()
 
 
-L_box = 2000   ### Mpc/h
-N = 1500     ### nb de "pixels"
+L_box = 120  ### Mpc/h
+N = 4000     ### nb de "pixels"
+
+
+t = np.linspace(ti, 14, 400)
+"""
+plt.plot(t, D(t))
+plt.xlabel('temps t en Gyr')
+plt.ylabel('growth factor D(t)')
+plt.title('Evolution du growth factor en fonction du temps')
+plt.grid(True)
+plt.show()
+
+plt.plot(cpp.a2(t), D(t))
+plt.xlabel('scale factor a')
+plt.ylabel('growth factor D(a)')
+plt.title('Évolution du growth factor D en fonctin du scale factor a')
+plt.grid(True)
+plt.show()
 
 
 affichage_gradient(L_box, N)
 affichage_position(ti, L_box, N)
 affichage_position(5, L_box, N)
 affichage_position(13.8, L_box, N)
+
+
+width = [1e-5, 1e-4, 1e-3, 0.01, 0.1, 1]
+for i in width :
+
+    affichage_position(13.8, L_box, N, i)
+
+
+L_box = [10,100,1000,10000]
+for i in L_box :
+
+    affichage_position(13.8, i, N, 0.1)"""
+affichage_position(ti, L_box, N, 0.1)
+affichage_position(13.8, L_box, N, 0.05)
+affichage_position(13.8, L_box, N, 0.025)
+affichage_position(13.8, L_box, N, 0.075)
+affichage_position(13.8, L_box, N, 0.1)
+affichage_position(13.8, L_box, N, 0.2)
 plt.show()
 
 
