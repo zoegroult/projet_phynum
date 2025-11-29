@@ -68,39 +68,69 @@ def a(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5):
 
 
 def a2(t_voulu, om_0=Omega_m0, or_0=Omega_r0, ol_0=Omega_L0, H = 1e-5, afficher = False):
-    """kljcbsqmkvbzqmjbvmqjbvkbvmkqjz
-    
-    bvmozhbvqjbzrlvbzmjoebgvmouzbvzmjbv"""
+    norm = 1.0154729584922937    # cste de normalisation : a_non_normé(t0) = 1.0
     A = ai
     t = ti
 
-    while t < t_voulu :
+    if np.isscalar(t_voulu):
 
-        if t < 1e-10:
-            h = 1e-12
+        while t < t_voulu :
 
-        elif t < 1e-8:
-            h = 1e-10
+            if t < 1e-10:
+             h = 1e-12
 
-        elif t < 1e-6:
-            h = 1e-8
+            elif t < 1e-8:
+                h = 1e-10
 
-        elif t< 1e-4:
-            h = 1e-6
+            elif t < 1e-6:
+                h = 1e-8
 
-        else:
-            h = H
+            elif t< 1e-4:
+                h = 1e-6
+
+            else:
+                h = H
 
 
-        A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
-        t += h
+            A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
+            t += h
     
-    if afficher == True:
-        print(f'a({t_voulu}) =', A/1.0154729584922937)
+        if afficher == True:
+            print(f'a({t_voulu}) =', A/norm)
+
+        return A/norm
+    
+    else : 
+        L = np.zeros( len(t_voulu) )
+        A = ai
+        t = ti
+
+        for j, tj in enumerate(t_voulu):
+            
+
+            while t < tj:
+
+                if t < 1e-10:
+                    h = 1e-12
+
+                elif t < 1e-8:
+                    h = 1e-10
+
+                elif t < 1e-6:
+                    h = 1e-8
+
+                elif t< 1e-4:
+                    h = 1e-6
+
+                else:
+                    h = H
+                
+                A = A + h * H0 * np.sqrt( (A**-2) * or_0 + (A**-1) * om_0 + (A**2) * ol_0 )
+                t += h
+
+            L[j] = A
         
-    return A/1.0154729584922937
-
-
+        return L/norm
 
 
 
@@ -162,7 +192,7 @@ rho_C = data[:,5]
 
 
 # plot de a(t)
-t = np.linspace(1e-7, 14, 1000)
+t = np.linspace(1e-7, 14, 500)
 A = []
 for i in t:
     A.append(a2(i))
@@ -170,7 +200,7 @@ plt.figure(figsize=(7,5))
 plt.plot(t, A, 'b:')
 plt.xlabel('temps t en Gyr')
 plt.ylabel('facteur d\'échelle a(t)')
-plt.title(f"Courbe d\'évolution du facteur d\'échelle a(t),  t0={t0}")
+plt.title("Courbe d\'évolution du facteur d\'échelle a(t)")
 plt.grid(True)
 plt.show()
 
