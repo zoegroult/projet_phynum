@@ -1,3 +1,17 @@
+"""
+
+Bibliothèque de fonctions pour le projet :
+- facteur d’échelle a(t)
+- paramètres de densité
+- taux de croissance D(t)
+- approximation de Zel’dovich
+- affichage
+
+"""
+
+
+
+
 import numpy as np 
 import matplotlib.pyplot as plt
 

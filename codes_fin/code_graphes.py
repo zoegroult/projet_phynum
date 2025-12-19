@@ -1,3 +1,18 @@
+
+"""
+
+Contient l’ensemble des fonctions permettant de tracer :
+- le facteur d’échelle
+- les paramètres de densité
+- les densités rho
+- le facteur de croissance
+- les cartes de densité avec l’approximation de Zel’dovich
+
+Utilise les fonctions définies dans bib_function.py
+
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import bib_function as bib
@@ -108,7 +123,7 @@ def D_t():
 
 # en fonction du facteur d'échelle 
 def D_a():
-    plt.plot(bib.a(t), bib.D(bib.a(t)))
+    plt.plot(bib.a(t), bib.D(t))
     plt.xlabel('scale factor a')
     plt.ylabel('growth factor D(a)')
     plt.title('Évolution du growth factor D en fonctin du scale factor a')
@@ -134,4 +149,53 @@ def pos_t():
 
 
 
-pos_t()
+
+
+
+
+# ----------------- Menu interactif -----------------
+
+def menu():
+    while True:
+        print("\n=== Menu des plots ===")
+        print("1: Facteur d'échelle a(t)")
+        print("2: Paramètres de densité Omega_i(t)")
+        print("3: Paramètres de densité Omega_i(a) log/log")
+        print("4: Densités rho_i(t) log/log")
+        print("5: Densités rho_i(a) log/log")
+        print("6: Growth factor D(t)")
+        print("7: Growth factor D(a)")
+        print("8: Gradient de psi")
+        print("9: Position des particules")
+        print("0: Quitter")
+        choice = input("Choisissez un plot à afficher (nombre): ")
+
+        if choice == "1":
+            scalefactor_t()
+        elif choice == "2":
+            omega_t()
+        elif choice == "3":
+            omega_a()
+        elif choice == "4":
+            rho_t()
+        elif choice == "5":
+            rho_a()
+        elif choice == "6":
+            D_t()
+        elif choice == "7":
+            D_a()
+        elif choice == "8":
+            G_psi()
+        elif choice == "9":
+            pos_t()
+        elif choice == "0":
+            print("Fin du programme.")
+            break
+        else:
+            print("Choix invalide, réessayez.")
+
+
+# ----------------- Exécution -----------------
+
+if __name__ == "__main__":
+    menu()
